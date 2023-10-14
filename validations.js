@@ -16,5 +16,12 @@ export const postCreateValidation = [
   body('title', 'Введите заголовок статьи').isLength({ min: 3 }).isString(),
   body('text', 'Введите текст статьи').isLength({ min: 10 }).isString(),
   body('tags', 'Неверный формат тэгов').optional().isArray(),
-  body('imageUrl', 'Неверная ссылка на изображение').optional().isURL(),
+  body('imageUrl', 'Неверная ссылка на изображение').optional().isString(),
+];
+
+export const commentCreateValidation = [
+  body('postId', 'Неверный формат id поста').isString().isLength({ min: 5 }),
+  body('user.*.fullName', 'Неверный формат пользователя').isString(),
+  body('user.*.awatarName', 'Неверный формат пользователя').isString().isURL(),
+  body('text', 'Неверный формат текста комментария').isString(),
 ];

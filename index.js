@@ -1,11 +1,17 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import multer from 'multer';
+import cors from 'cors';
 
-import { registerValidation, loginValidation, postCreateValidation } from './validations.js';
-import checkAuth from './utils/checkAuth.js';
-import * as UserController from './controllers/UserController.js';
-import * as PostController from './controllers/PostController.js';
+import {
+  registerValidation,
+  loginValidation,
+  postCreateValidation,
+  commentCreateValidation,
+} from './validations.js';
+import { checkAuth, handleValidationErrors } from './utils/index.js';
+
+import { UserController, PostController, CommentController } from './controllers/index.js';
 
 mongoose
   .connect('mongodb+srv://admin:wwwwww@cluster0.jb0qok7.mongodb.net/blog')
@@ -16,7 +22,7 @@ const app = express();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cd(null, 'uploads');
+    cb(null, 'uploads');
   },
   filename: (req, file, cb) => {
     cb(null, file.originalname);
@@ -25,17 +31,57 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+app.use(cors());
 app.use(express.json());
+app.use('/mern-blog/uploads', express.static('uploads'));
 
-app.post('/auth/login', loginValidation, UserController.login);
-app.post('/auth/register', registerValidation, UserController.register);
-app.get('/auth/me', checkAuth, UserController.getMe);
+// authorization
+app.post('/mern-blog/auth/login', loginValidation, handleValidationErrors, UserController.login);
+app.post(
+  '/mern-blog/auth/register',
+  registerValidation,
+  handleValidationErrors,
+  UserController.register,
+);
+app.get('/mern-blog/auth/me', checkAuth, UserController.getMe);
 
-app.get('/posts', PostController.getAll);
-app.get('/posts/:id', PostController.getOne);
-app.post('/posts', checkAuth, postCreateValidation, PostController.create);
-app.delete('/posts/:id', checkAuth, PostController.remove);
-app.patch('/posts/:id', checkAuth, PostController.update);
+// image upload
+app.post('/mern-blog/upload', checkAuth, upload.single('image'), (req, res) => {
+  res.json({
+    url: `/mern-blog/uploads/${req.file.originalname}`,
+  });
+});
+
+// posts
+app.get('/mern-blog/posts/tags', PostController.getLastTags);
+app.get('/mern-blog/posts/tags/:tagName', PostController.getTagPosts);
+app.get('/mern-blog/posts', PostController.getAll);
+app.get('/mern-blog/posts/:id', PostController.getOne);
+app.post(
+  '/mern-blog/posts',
+  checkAuth,
+  postCreateValidation,
+  handleValidationErrors,
+  PostController.create,
+);
+app.delete('/mern-blog/posts/:id', checkAuth, PostController.remove);
+app.patch(
+  '/mern-blog/posts/:id',
+  checkAuth,
+  postCreateValidation,
+  handleValidationErrors,
+  PostController.update,
+);
+
+// comments
+app.post(
+  '/mern-blog/comments',
+  commentCreateValidation,
+  handleValidationErrors,
+  CommentController.create,
+);
+app.post('/mern-blog/comments/allposts', checkAuth, CommentController.getPostComments);
+app.get('/mern-blog/comments', CommentController.getSomeComments);
 
 app.listen(4444, (err) => {
   if (err) return console.log(err);

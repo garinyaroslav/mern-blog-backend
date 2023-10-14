@@ -1,15 +1,52 @@
 import PostModel from '../models/Post.js';
-import { validationResult } from 'express-validator';
+
+export const getLastTags = async (req, res) => {
+  try {
+    const posts = await PostModel.find().limit(5).exec();
+
+    const tags = posts
+      .map((obj) => obj.tags)
+      .flat()
+      .slice(0, 5);
+
+    res.json(tags);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: 'Не удалось получить тэги',
+    });
+  }
+};
 
 export const getAll = async (req, res) => {
   try {
-    const posts = await PostModel.find().populate('user').exec();
+    const posts =
+      req.query.sort === 'popular'
+        ? await PostModel.find().sort({ viewsCount: -1 }).populate('user').exec()
+        : await PostModel.find().sort({ createdAt: -1 }).populate('user').exec();
 
     res.json(posts);
   } catch (error) {
     console.error(error);
     res.status(500).json({
       message: 'Не удалось получить статьи',
+    });
+  }
+};
+
+export const getTagPosts = async (req, res) => {
+  try {
+    const tagName = req.params.tagName;
+    const posts = await PostModel.find({ tags: tagName })
+      .sort({ viewsCount: -1 })
+      .populate('user')
+      .exec();
+
+    res.json(posts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: 'Не удалось получить статьи по тегам',
     });
   }
 };
@@ -23,6 +60,7 @@ export const getOne = async (req, res) => {
       { $inc: { viewsCount: 1 } },
       { returnDocument: 'after' },
     )
+      .populate('user')
       .then((doc) => {
         if (!doc) {
           return res.status(404).json({
@@ -77,11 +115,6 @@ export const remove = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
-    }
-
     const doc = new PostModel({
       title: req.body.title,
       text: req.body.text,

@@ -26,7 +26,9 @@ const PostSchema = new mongoose.Schema(
     },
     imageUrl: String,
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
 export default mongoose.model('Post', PostSchema);
