@@ -14,7 +14,7 @@ import { checkAuth, handleValidationErrors } from './utils/index.js';
 import { UserController, PostController, CommentController } from './controllers/index.js';
 
 mongoose
-  .connect('mongodb+srv://admin:wwwwww@cluster0.jb0qok7.mongodb.net/blog')
+  .connect(process.env.MONGODB_URL)
   .then(() => console.log('DB OK'))
   .catch((error) => console.error('DB error', error));
 
@@ -83,7 +83,7 @@ app.post(
 app.post('/mern-blog/comments/allposts', checkAuth, CommentController.getPostComments);
 app.get('/mern-blog/comments', CommentController.getSomeComments);
 
-app.listen(4444, (err) => {
+app.listen(process.env.PORT || 4444, (err) => {
   if (err) return console.log(err);
   console.log('server OK');
 });
