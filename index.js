@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs';
 import mongoose from 'mongoose';
 import multer from 'multer';
 import cors from 'cors';
@@ -22,6 +23,7 @@ const app = express();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
     cb(null, 'uploads');
   },
   filename: (req, file, cb) => {
@@ -48,7 +50,7 @@ app.get('/mern-blog/auth/me', checkAuth, UserController.getMe);
 // image upload
 app.post('/mern-blog/upload', checkAuth, upload.single('image'), (req, res) => {
   res.json({
-    url: `/mern-blog/uploads/${req.file.originalname}`,
+    url: `/uploads/${req.file.originalname}`,
   });
 });
 
