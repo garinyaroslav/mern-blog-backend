@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import mongoose from 'mongoose';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
 import cors from 'cors';
 
 import {
@@ -13,6 +14,12 @@ import {
 import { checkAuth, handleValidationErrors } from './utils/index.js';
 
 import { UserController, PostController, CommentController } from './controllers/index.js';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: +process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
 
 mongoose
   .connect(process.env.MONGODB_URL)
@@ -48,9 +55,10 @@ app.post(
 app.get('/mern-blog/auth/me', checkAuth, UserController.getMe);
 
 // image upload
-app.post('/mern-blog/upload', checkAuth, upload.single('image'), (req, res) => {
+app.post('/mern-blog/upload', checkAuth, upload.single('image'), async (req, res) => {
+  const { url } = await cloudinary.uploader.upload(`./uploads/${req.file.originalname}`);
   res.json({
-    url: `/uploads/${req.file.originalname}`,
+    url,
   });
 });
 

@@ -20,6 +20,7 @@
   "homepage": "https://github.com/garinyaroslav/project-mern",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "cloudinary": "^1.41.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
